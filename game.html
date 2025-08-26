@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pannaphon Garden Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Animated background elements */
+        .cloud {
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50px;
+            animation: float 15s ease-in-out infinite;
+        }
+        
+        .cloud:before {
+            content: '';
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50px;
+        }
+        
+        .cloud1 {
+            width: 80px;
+            height: 30px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .cloud1:before {
+            width: 50px;
+            height: 30px;
+            top: -15px;
+            left: 10px;
+        }
+        
+        .cloud2 {
+            width: 60px;
+            height: 25px;
+            top: 20%;
+            right: 20%;
+            animation-delay: -5s;
+        }
+        
+        .cloud2:before {
+            width: 40px;
+            height: 25px;
+            top: -12px;
+            right: 8px;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .game-title {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            font-size: 3.5em;
+            font-weight: bold;
+            color: #2d3436;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+            z-index: 1000;
+            background: linear-gradient(45deg, #00b894, #00a085, #55a3ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 120px 20px 20px;
+        }
+        
+        .stats-panel {
+            background: rgba(255,255,255,0.9);
+            border-radius: 25px;
+            padding: 20px 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .stat {
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            color: #00b894;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #636e72;
+            font-size: 0.9em;
+        }
+        
+        .controls {
+            background: rgba(255,255,255,0.9);
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .seed-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .seed-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .seed-btn.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0,184,148,0.6);
+        }
+        
+        .flower-btn { background: linear-gradient(45deg, #fd79a8, #fdcb6e); }
+        .tree-btn { background: linear-gradient(45deg, #00b894, #55a3ff); }
+        .fruit-btn { background: linear-gradient(45deg, #e17055, #fab1a0); }
+        .special-btn { background: linear-gradient(45deg, #a29bfe, #6c5ce7); }
+        
+        .garden {
+            background: rgba(255,255,255,0.95);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            backdrop-filter: blur(20px);
+            border: 3px solid rgba(0,184,148,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .soil {
+            width: 800px;
+            height: 400px;
+            background: linear-gradient(135deg, #8D6E63, #A1887F);
+            border-radius: 20px;
+            position: relative;
+            cursor: crosshair;
+            box-shadow: inset 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .plant {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform-origin: bottom center;
+        }
+        
+        .plant:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+        
+        /* Plant sprites */
+        .flower1 { font-size: 2em; }
+        .flower2 { font-size: 2.2em; }
+        .flower3 { font-size: 2.4em; }
+        .tree1 { font-size: 3em; }
+        .tree2 { font-size: 3.2em; }
+        .tree3 { font-size: 3.5em; }
+        .fruit1 { font-size: 2.5em; }
+        .fruit2 { font-size: 2.8em; }
+        .fruit3 { font-size: 3em; }
+        .special1 { font-size: 2.8em; }
+        .special2 { font-size: 3.2em; }
+        .special3 { font-size: 3.8em; }
+        
+        .plant-info {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .plant:hover .plant-info {
+            opacity: 1;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .water-btn { background: linear-gradient(45deg, #74b9ff, #0984e3); }
+        .harvest-btn { background: linear-gradient(45deg, #fdcb6e, #e17055); }
+        .clear-btn { background: linear-gradient(45deg, #636e72, #2d3436); }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: rgba(0,184,148,0.95);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-weight: bold;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        @keyframes grow {
+            0% { transform: scale(0) rotate(-180deg); }
+            50% { transform: scale(1.2) rotate(-90deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+        
+        .sparkle-effect {
+            position: absolute;
+            pointer-events: none;
+            color: #ffd700;
+            animation: sparkle 1s ease-out forwards;
+        }
+        
+        .plant.growing {
+            animation: grow 0.8s ease-out;
+        }
+        
+        .weather {
+            position: absolute;
+            top: 100px;
+            right: 30px;
+            font-size: 2em;
+            opacity: 0.7;
+            z-index: 999;
+        }
+        
+        .achievement {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: linear-gradient(45deg, #a29bfe, #6c5ce7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-weight: bold;
+            transform: translateY(100px);
+            transition: transform 0.5s ease;
+            z-index: 1002;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .achievement.show {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="weather" id="weather">☀️</div>
+    
+    <div class="game-title">Pannaphon</div>
+    
+    <div class="notification" id="notification"></div>
+    <div class="achievement" id="achievement"></div>
+    
+    <div class="game-container">
+        <div class="stats-panel">
+            <div class="stat">
+                <span class="stat-value" id="coins">50</span>
+                <span class="stat-label">💰 เหรียญ</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="plants">0</span>
+                <span class="stat-label">🌱 ต้นไม้</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="level">1</span>
+                <span class="stat-label">⭐ เลเวล</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="experience">0</span>
+                <span class="stat-label">🏆 ประสบการณ์</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="seed-btn flower-btn active" data-type="flower" data-cost="10">
+                🌸 ดอกไม้ (10 เหรียญ)
+            </button>
+            <button class="seed-btn tree-btn" data-type="tree" data-cost="25">
+                🌳 ต้นไม้ (25 เหรียญ)
+            </button>
+            <button class="seed-btn fruit-btn" data-type="fruit" data-cost="35">
+                🍎 ผลไม้ (35 เหรียญ)
+            </button>
+            <button class="seed-btn special-btn" data-type="special" data-cost="50">
+                ✨ พิเศษ (50 เหรียญ)
+            </button>
+        </div>
+        
+        <div class="garden">
+            <div class="soil" id="soil"></div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="action-btn water-btn" onclick="waterPlants()">
+                💧 รดน้ำทั้งหมด (5 เหรียญ)
+            </button>
+            <button class="action-btn harvest-btn" onclick="harvestAll()">
+                🌾 เก็บเกี่ยวทั้งหมด
+            </button>
+            <button class="action-btn clear-btn" onclick="clearGarden()">
+                🗑️ ล้างสวน
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        let gameData = {
+            coins: 50,
+            plants: 0,
+            level: 1,
+            experience: 0,
+            selectedSeed: 'flower',
+            plantId: 0,
+            weather: 'sunny',
+            achievements: []
+        };
+        
+        const plantTypes = {
+            flower: {
+                sprites: ['🌸', '🌺', '🌻', '🌷', '💮'],
+                growthStages: ['🌱', '🌿', '🌸'],
+                cost: 10,
+                reward: 15,
+                growTime: 3000,
+                exp: 5
+            },
+            tree: {
+                sprites: ['🌳', '🌲', '🎄', '🌴', '🌊'],
+                growthStages: ['🌱', '🌿', '🌳'],
+                cost: 25,
+                reward: 40,
+                growTime: 5000,
+                exp: 15
+            },
+            fruit: {
+                sprites: ['🍎', '🍊', '🍌', '🍇', '🥝'],
+                growthStages: ['🌱', '🌿', '🍎'],
+                cost: 35,
+                reward: 60,
+                growTime: 7000,
+                exp: 25
+            },
+            special: {
+                sprites: ['🌟', '🦄', '🌈', '🔮', '👑'],
+                growthStages: ['✨', '⭐', '🌟'],
+                cost: 50,
+                reward: 100,
+                growTime: 10000,
+                exp: 50
+            }
+        };
+        
+        const achievements = [
+            { id: 'first_plant', name: 'นักปลูกมือใหม่', desc: 'ปลูกต้นแรก', condition: () => gameData.plants >= 1 },
+            { id: 'rich_farmer', name: 'เศรษฐีเกษตร', desc: 'มีเหรียญ 200+', condition: () => gameData.coins >= 200 },
+            { id: 'plant_master', name: 'ปลูกแมส', desc: 'ปลูก 20 ต้น', condition: () => gameData.plants >= 20 },
+            { id: 'level_up', name: 'เลเวลอัพ', desc: 'ถึงเลเวล 3', condition: () => gameData.level >= 3 }
+        ];
+        
+        function updateUI() {
+            document.getElementById('coins').textContent = gameData.coins;
+            document.getElementById('plants').textContent = gameData.plants;
+            document.getElementById('level').textContent = gameData.level;
+            document.getElementById('experience').textContent = gameData.experience;
+            
+            // Level up check
+            const expNeeded = gameData.level * 100;
+            if (gameData.experience >= expNeeded) {
+                gameData.level++;
+                gameData.experience = 0;
+                showNotification(`🎉 เลเวลอัพ! เลเวล ${gameData.level}`, 'success');
+                updateWeather();
+            }
+            
+            checkAchievements();
+        }
+        
+        function selectSeed(type, cost) {
+            if (gameData.coins < cost) {
+                showNotification('เหรียญไม่พอ! 💸', 'error');
+                return;
+            }
+            
+            gameData.selectedSeed = type;
+            document.querySelectorAll('.seed-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        
+        function plantSeed(x, y) {
+            const seedType = gameData.selectedSeed;
+            const plantData = plantTypes[seedType];
+            
+            if (gameData.coins < plantData.cost) {
+                showNotification('เหรียญไม่พอสำหรับการปลูก! 💸', 'error');
+                return;
+            }
+            
+            gameData.coins -= plantData.cost;
+            gameData.plants++;
+            gameData.experience += plantData.exp;
+            
+            const plant = createPlant(x, y, seedType);
+            document.getElementById('soil').appendChild(plant);
+            
+            growPlant(plant, seedType);
+            updateUI();
+            showNotification(`ปลูก${getSeedName(seedType)}แล้ว! 🌱`, 'success');
+        }
+        
+        function createPlant(x, y, type) {
+            const plant = document.createElement('div');
+            plant.className = 'plant growing';
+            plant.style.left = (x - 20) + 'px';
+            plant.style.top = (y - 40) + 'px';
+            plant.dataset.type = type;
+            plant.dataset.stage = '0';
+            plant.dataset.id = gameData.plantId++;
+            
+            const info = document.createElement('div');
+            info.className = 'plant-info';
+            info.textContent = `${getSeedName(type)} - กำลังโต`;
+            plant.appendChild(info);
+            
+            plant.textContent = plantTypes[type].growthStages[0];
+            plant.addEventListener('click', () => interactWithPlant(plant));
+            
+            return plant;
+        }
+        
+        function growPlant(plant, type) {
+            const plantData = plantTypes[type];
+            let stage = 0;
+            
+            const growthInterval = setInterval(() => {
+                stage++;
+                if (stage < plantData.growthStages.length) {
+                    plant.textContent = plantData.growthStages[stage];
+                    plant.dataset.stage = stage;
+                    
+                    if (stage === plantData.growthStages.length - 1) {
+                        // Fully grown
+                        const finalSprite = plantData.sprites[Math.floor(Math.random() * plantData.sprites.length)];
+                        plant.textContent = finalSprite;
+                        plant.querySelector('.plant-info').textContent = `${getSeedName(type)} - โตเต็มที่ (คลิกเก็บ)`;
+                        plant.style.filter = 'drop-shadow(0 0 10px rgba(0,184,148,0.6))';
+                        clearInterval(growthInterval);
+                        createSparkles(plant);
+                    }
+                }
+            }, plantData.growTime / plantData.growthStages.length);
+        }
+        
+        function interactWithPlant(plant) {
+            const type = plant.dataset.type;
+            const stage = parseInt(plant.dataset.stage);
+            const plantData = plantTypes[type];
+            
+            if (stage === plantData.growthStages.length - 1) {
+                // Harvest
+                gameData.coins += plantData.reward;
+                gameData.experience += plantData.exp;
+                showNotification(`+${plantData.reward} เหรียญ! 💰`, 'success');
+                
+                plant.style.animation = 'sparkle 0.5s ease-out';
+                setTimeout(() => {
+                    plant.remove();
+                    gameData.plants--;
+                    updateUI();
+                }, 500);
+            } else {
+                showNotification('ยังไม่โตเต็มที่! ⏰', 'info');
+            }
+        }
+        
+        function waterPlants() {
+            if (gameData.coins < 5) {
+                showNotification('เหรียญไม่พอสำหรับรดน้ำ! 💸', 'error');
+                return;
+            }
+            
+            const plants = document.querySelectorAll('.plant');
+            if (plants.length === 0) {
+                showNotification('ไม่มีต้นไม้ให้รดน้ำ! 🌱', 'info');
+                return;
+            }
+            
+            gameData.coins -= 5;
+            plants.forEach(plant => {
+                plant.style.animation = 'grow 0.5s ease';
+                createSparkles(plant);
+            });
+            
+            showNotification('รดน้ำทั้งสวนแล้ว! 💧', 'success');
+            updateUI();
+        }
+        
+        function harvestAll() {
+            const maturePlants = document.querySelectorAll('.plant[data-stage="2"]');
+            if (maturePlants.length === 0) {
+                showNotification('ไม่มีต้นไม้ที่โตเต็มที่! 🌱', 'info');
+                return;
+            }
+            
+            let totalReward = 0;
+            maturePlants.forEach(plant => {
+                const type = plant.dataset.type;
+                const reward = plantTypes[type].reward;
+                totalReward += reward;
+                gameData.experience += plantTypes[type].exp;
+                
+                plant.style.animation = 'sparkle 0.5s ease-out';
+                setTimeout(() => {
+                    plant.remove();
+                    gameData.plants--;
+                }, 500);
+            });
+            
+            gameData.coins += totalReward;
+            showNotification(`เก็บเกี่ยวได้ +${totalReward} เหรียญ! 🌾`, 'success');
+            updateUI();
+        }
+        
+        function clearGarden() {
+            if (confirm('ต้องการล้างสวนทั้งหมดจริงหรือ?')) {
+                document.getElementById('soil').innerHTML = '';
+                gameData.plants = 0;
+                showNotification('ล้างสวนแล้ว! 🗑️', 'info');
+                updateUI();
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification show ${type}`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+        
+        function createSparkles(element) {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'sparkle-effect';
+                    sparkle.textContent = '✨';
+                    sparkle.style.left = (Math.random() * 40 - 20) + 'px';
+                    sparkle.style.top = (Math.random() * 40 - 20) + 'px';
+                    element.appendChild(sparkle);
+                    
+                    setTimeout(() => sparkle.remove(), 1000);
+                }, i * 100);
+            }
+        }
+        
+        function getSeedName(type) {
+            const names = {
+                flower: 'ดอกไม้',
+                tree: 'ต้นไม้',
+                fruit: 'ผลไม้',
+                special: 'พิเศษ'
+            };
+            return names[type];
+        }
+        
+        function updateWeather() {
+            const weathers = ['☀️', '⛅', '🌧️', '🌈'];
+            const weather = weathers[Math.floor(Math.random() * weathers.length)];
+            document.getElementById('weather').textContent = weather;
+        }
+        
+        function checkAchievements() {
+            achievements.forEach(achievement => {
+                if (!gameData.achievements.includes(achievement.id) && achievement.condition()) {
+                    gameData.achievements.push(achievement.id);
+                    showAchievement(achievement);
+                }
+            });
+        }
+        
+        function showAchievement(achievement) {
+            const achievementEl = document.getElementById('achievement');
+            achievementEl.textContent = `🏆 ${achievement.name}: ${achievement.desc}`;
+            achievementEl.classList.add('show');
+            
+            setTimeout(() => {
+                achievementEl.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Event listeners
+        document.querySelectorAll('.seed-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.type;
+                const cost = parseInt(btn.dataset.cost);
+                selectSeed(type, cost);
+            });
+        });
+        
+        document.getElementById('soil').addEventListener('click', (e) => {
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Check if there's already a plant nearby
+            const existingPlants = document.querySelectorAll('.plant');
+            let canPlant = true;
+            
+            existingPlants.forEach(plant => {
+                const plantX = parseInt(plant.style.left);
+                const plantY = parseInt(plant.style.top);
+                const distance = Math.sqrt(Math.pow(x - plantX - 20, 2) + Math.pow(y - plantY - 40, 2));
+                
+                if (distance < 60) {
+                    canPlant = false;
+                }
+            });
+            
+            if (canPlant) {
+                plantSeed(x, y);
+            } else {
+                showNotification('ใกล้ต้นไม้อื่นเกินไป! 🌱', 'error');
+            }
+        });
+        
+        // Initialize game
+        updateUI();
+        updateWeather();
+        setInterval(updateWeather, 30000); // Change weather every 30 seconds
+        
+        // Welcome message
+        setTimeout(() => {
+            showNotification('ยินดีต้อนรับสู่สวนของ Pannaphon! 🌻', 'success');
+        }, 1000);
+    </script>
+</body>
+</html>
